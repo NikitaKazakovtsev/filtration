@@ -10,14 +10,12 @@ with open("phonebook_raw.csv", encoding="utf-8") as f:
   rows = csv.reader(f, delimiter=",")
   contacts_list = list(rows)
 def main(contact_list: list):
-    new_list = list()
+    list1 = list()
     for item in contact_list:
         name = ' '.join(item[:3]).split(' ')
-        result = [name[0], name[1], name[2], item[3], item[4],
-                  re.sub(phon, phon1, item[5]),
-                  item[6]]
-        new_list.append(result)
-    return union(new_list)
+        res = [name[0], name[1], name[2], item[3], item[4],re.sub(phon, phon1, item[5]),item[6]]
+        list1.append(res)
+    return union(list1)
 
 
 def union(data: list):
