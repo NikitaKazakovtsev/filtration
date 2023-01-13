@@ -1,33 +1,45 @@
-from pprint import pprint
-# читаем адресную книгу в формате CSV в список contacts_list
-import csv
 import re
+from pprint import pprint
+import csv
 
-text1 = """Усольцев Олег Валентинович,,,ФНС,главный специалист – эксперт отдела взаимодействия с федеральными органами власти Управления налогообложения имущества и доходов физических лиц,+7 (495) 913-04-78,opendata@nalog.ru
-Мартиняхин Виталий Геннадьевич,,,ФНС,,+74959130037,
-Наркаев,Вячеслав Рифхатович,,ФНС,,8 495-913-0168,
-Мартиняхин,Виталий,Геннадьевич,ФНС,cоветник отдела Интернет проектов Управления информационных технологий,,,
-Лукина Ольга Владимировна,,,Минфин,,+7 (495) 983-36-99 доб. 2926,Olga.Lukina@minfin.ru
-Паньшин Алексей Владимирович,,,Минфин,,8(495)748-49-73,1248@minfin.ru
-Лагунцов Иван Алексеевич,,,Минфин,,+7 (495) 913-11-11 (доб. 0792),
-Лагунцов Иван,,,,,,Ivan.Laguntcov@minfin.ru"""
-
-p = r"\+?((7|8)[\(|\s*]*(\d{3})[\)|\s*]?[\s|-]*(\d{3})[\s|-]?(\d{2})[\s|-]?(\d{2}))"
-p1 = r"\(?доб. ?(\d*)\)?"
-text = re.sub(p, r"+7(\3)\4-\5-\6", text1)
-text = re.sub(p1, r"доб.\1", text)
-
-pattern = r"^(\w+)[\s|\,]*(\w*)[,|\s](\w*),*([А-ё]\w*)?,+([a-ё –]+)?,*(\+7\(\d*\)\d*-\d*-\d* ?[доб]*\.?\d*)?,?[А-ё]?([a-zA-Z.@ 1-9]*)?"
-result1 = re.sub(pattern, r"\1,\2", text,flags=re.M)
-result2 = re.sub(pattern, r"\1,\2 \3 \4 \5 \6 \7", text,flags=re.M)
-#print (result1)
-r= result1.split('\n')
-n = []
-for i in r:
-    if i not in n:
-        n.append(i)
-
-r100 = result2.split('\n')
-print(r100)
+phon = r'(\+7|8)*[\s\(]*(\d{3})[\)\s-]*(\d{3})[-]*(\d{2})[-]*(\d{2})[\s\(]*(доб\.)*[\s]*(\d+)*[\)]*'
+phon1 = r'+7(\2)-\3-\4-\5 \6\7'
 
 
+with open("phonebook_raw.csv", encoding="utf-8") as f:
+  rows = csv.reader(f, delimiter=",")
+  contacts_list = list(rows)
+def main(contact_list: list):
+    new_list = list()
+    for item in contact_list:
+        name = ' '.join(item[:3]).split(' ')
+        result = [name[0], name[1], name[2], item[3], item[4],
+                  re.sub(phon, phon1, item[5]),
+                  item[6]]
+        new_list.append(result)
+    return union(new_list)
+
+
+def union(data: list):
+    for con in data:
+        first = con[0]
+        last = con[1]
+        for con1 in data:
+            new_f = con1[0]
+            new_l = con1[1]
+            if first == new_f and last == new_l:
+                if con[2] == "": con[2] = con1[2]
+                if con[3] == "": con[3] = con1[3]
+                if con[4] == "": con[4] = con1[4]
+                if con[5] == "": con[5] = con1[5]
+                if con[6] == "": con[6] = con1[6]
+    res = list()
+    for a in data:
+        if a not in res:
+            res.append(a)
+    return res
+
+
+with open("phonebook.csv", "w", encoding="utf-8") as f:
+    datawriter = csv.writer(f, delimiter=',')
+    datawriter.writerows(main(contacts_list))
